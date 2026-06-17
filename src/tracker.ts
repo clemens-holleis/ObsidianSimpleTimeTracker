@@ -150,14 +150,11 @@ export function displayTracker(app: App, tracker: Tracker, element: HTMLElement,
 }
 
 export function getDuration(entry: Entry): number {
-    if (entry.subEntries) {
-        return getTotalDuration(entry.subEntries);
-    } else if (!entry.startTime) {
-        return 0;
-    } else {
-        let endTime = entry.endTime ? moment(entry.endTime) : moment();
-        return endTime.diff(moment(entry.startTime));
-    }
+    if (entry.subEntries) return getTotalDuration(entry.subEntries);
+    if (!entry.startTime) return 0;
+
+    const endTime = entry.endTime ? moment(entry.endTime) : moment();
+    return endTime.diff(moment(entry.startTime));
 }
 
 export function getDurationDate(entry: Entry, date: string): number {
@@ -188,42 +185,37 @@ export function getDurationToday(entry: Entry): number {
     return getDurationDate(entry, today);
 }
 
-export function getTotalDuration(entries: Entry[]): number {
+function _getTotal(entries: Entry[], fn: CallableFunction, extraArgs: Array<any> = []){
     let ret = 0;
-    for (let entry of entries)
-        ret += getDuration(entry);
+    for (const entry of entries)
+        ret += fn(entry,...extraArgs);
     return ret;
+}
+export function getTotalDuration(entries: Entry[]): number {
+    return _getTotal(entries,getDuration);
 }
 
 export function getTotalDurationToday(entries: Entry[]): number {
-    let ret = 0;
-    for (let entry of entries)
-        ret += getDurationToday(entry);
-    return ret;
+    return _getTotal(entries,getDurationToday);
 }
 
 export function getTotalDurationDate(entries: Entry[], date: string): number {
-    let ret = 0;
-    for (let entry of entries)
-        ret += getDurationDate(entry, date);
-    return ret;
+    return _getTotal(entries,getDurationDate, [date]);
 }
 
 export function isRunning(tracker: Tracker): boolean {
     return !!getRunningEntry(tracker.entries);
 }
 
-export function getRunningEntry(entries: Entry[]): Entry {
+export function getRunningEntry(entries: Entry[]): Entry | null {
     for (let entry of entries) {
         // if this entry has sub entries, check if one of them is running
         if (entry.subEntries) {
             let running = getRunningEntry(entry.subEntries);
-            if (running)
-                return running;
+            if (running) return running;
         } else if (entry.startTime) {
             // if this entry has no sub entries and no end time, it's running
-            if (!entry.endTime)
-                return entry;
+            if (!entry.endTime) return entry;
         }
     }
     return null;
