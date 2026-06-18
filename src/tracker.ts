@@ -168,10 +168,10 @@ export function getDurationDate(entry: Entry, date: string): number {
     const startDayStart = startTime.clone().startOf("day");
 
     const targetDayStart = moment(date).startOf("day");
-    const targetDayEnd = moment(date).endOf("day");
+    const targetDayEnd = moment(date).startOf("day").add(1, "day");
 
     const timeFramesDoNotOverlap =
-        endTime.isBefore(targetDayStart) || startDayStart.isAfter(targetDayEnd);
+        endTime.isBefore(targetDayStart) || startDayStart.diff(targetDayEnd) >= 0;
     if (timeFramesDoNotOverlap) return 0;
 
     if (startTime.isBefore(targetDayStart)) startTime = targetDayStart;
@@ -639,3 +639,5 @@ class EditableTimestampField extends EditableField {
         }
     }
 }
+
+export { startNewEntry, endRunningEntry, startSubEntry, removeEntry, createTableSection, EditableField, EditableTimestampField };
